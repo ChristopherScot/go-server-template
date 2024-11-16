@@ -26,7 +26,6 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const core = require('@actions/core');
             const fs = require('fs');
             const yaml = require('js-yaml');
             const config = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
