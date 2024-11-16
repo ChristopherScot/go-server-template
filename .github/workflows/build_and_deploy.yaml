@@ -1,9 +1,5 @@
 name: Build and Deploy
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 on:
   push:
     branches:
@@ -84,3 +80,8 @@ jobs:
             git push
           else
             echo "$FILE does not exist."
+
+      shell: /usr/bin/bash -e {0}
+      env:
+        REGISTRY: ghcr.io
+        IMAGE_NAME: ${{ github.repository }}
