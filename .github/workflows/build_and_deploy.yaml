@@ -21,15 +21,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Extract service name from config.yaml
-        id: extract-config
+      - name: Extract repository name
+        id: extract-repo-name
         uses: actions/github-script@v4
         with:
           script: |
-            const fs = require('fs');
-            const yaml = require('js-yaml');
-            const config = yaml.load(fs.readFileSync('config.yaml', 'utf8'));
-            core.setOutput('service', config.service);
+            const core = require('@actions/core');
+            const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
+            core.setOutput('repo', repoName);
 
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
@@ -76,7 +75,7 @@ jobs:
         run: |
           cd homelab
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          FILE=app-of-apps/apps/${{ steps.extract-config.outputs.service }}.yaml
+          FILE=app-of-apps/apps/${{ steps.extract-repo-name.outputs.result }}.yaml
           if test -f "$FILE"; then
             sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
             git config --global user.email "chris@christo"
