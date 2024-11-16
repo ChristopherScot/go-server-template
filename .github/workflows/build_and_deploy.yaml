@@ -33,8 +33,10 @@ jobs:
 
       # Build Go binary
       - name: Build Go binary
-        run: export CGO_ENABLED=0 go build -o bin/app
-
+        run: |
+          export CGO_ENABLED=0
+          go build -o bin/app
+          
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
