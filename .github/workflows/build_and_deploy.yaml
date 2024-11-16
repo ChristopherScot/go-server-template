@@ -26,7 +26,6 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const core = require('@actions/core');
             const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
             core.setOutput('repo', repoName);
 
@@ -75,7 +74,7 @@ jobs:
         run: |
           cd homelab
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          FILE=app-of-apps/apps/${{ steps.extract-repo-name.outputs.result }}.yaml
+          FILE=app-of-apps/apps/${{ steps.extract-repo-name.outputs.repo }}.yaml
           if test -f "$FILE"; then
             sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
             git config --global user.email "chris@christo"
