@@ -6,6 +6,10 @@ on:
       - main
       - csm-dev
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -80,8 +84,4 @@ jobs:
             git push
           else
             echo "$FILE does not exist."
-
-      shell: /usr/bin/bash -e {0}
-      env:
-        REGISTRY: ghcr.io
-        IMAGE_NAME: ${{ github.repository }}
+          fi
