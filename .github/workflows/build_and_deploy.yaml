@@ -12,6 +12,7 @@ env:
 
 jobs:
   build:
+    environment: github-actions
     runs-on: ubuntu-latest
     permissions:
       contents: read
