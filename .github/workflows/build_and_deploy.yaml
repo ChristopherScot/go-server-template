@@ -70,18 +70,52 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: homelab
 
-      - name: Update ArgoCD application
+      - name: Update or create ArgoCD application
         run: |
-          cd homelab
-          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          FILE=app-of-apps/apps/${{ steps.extract-repo-name.outputs.repo }}.yaml
-          if test -f "$FILE"; then
-            sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
-            git config --global user.email "chris@christo"
-            git config --global user.name "Your Name"
-            git add $FILE
-            git commit -m "Update ArgoCD application to use new image"
-            git push
-          else
-            echo "$FILE does not exist."
-          fi
+          echo "Do the thing"
+
+      - name: SSH Debug
+        uses: action-ssh/ssh@v1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+#     cd homelab
+#     REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+#     FILE=app-of-apps/apps/${REPO_NAME}.yaml
+#     if test -f "$FILE"; then
+#       sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
+#     else
+#       cat <<EOF > $FILE
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: ${REPO_NAME}
+#   namespace: argocd
+# spec:
+#   destination:
+#     namespace: default
+#     server: 'https://kubernetes.default.svc'
+#   project: default
+#   source:
+#     repoURL: 'https://github.com/${{ github.repository }}.git'
+#     targetRevision: HEAD
+#     path: .
+#     helm:
+#       valueFiles:
+#         - values.yaml
+#       values: |
+#         image:
+#           repository: ghcr.io/${REPO_NAME}
+#           tag: latest
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+# EOF
+#     fi
+#     git config --global user.email "ci@chrisscotmartin.com"
+#     git config --global user.name "CI"
+#     git add $FILE
+#     git commit -m "Update or create ArgoCD application to use new image"
+#     git push
+
