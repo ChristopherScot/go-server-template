@@ -75,10 +75,10 @@ jobs:
           echo "Do the thing"
 
       - name: SSH Debug
-        uses: action-ssh/ssh@v1
+        uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          # ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 #     cd homelab
 #     REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
 #     FILE=app-of-apps/apps/${REPO_NAME}.yaml
