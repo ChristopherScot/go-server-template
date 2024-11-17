@@ -4,81 +4,117 @@ on:
   push:
     branches:
       - main
-      - csm-dev
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
-    environment: github-actions
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    environment: github-actions
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Setup tmate session for debugging
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
+        ssh-session: true
+      run: echo "Session is ready to debug at ${{ steps.tmate.outputs.ssh }}"
 
-      - name: Extract repository name
-        id: extract-repo-name
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
-            core.setOutput('repo', repoName);
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.19
 
-      # Build Go binary
-      - name: Build Go binary
-        run: |
-          export CGO_ENABLED=0
-          go build -o bin/app
+    - name: Extract repository name
+      id: extract-repo-name
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const core = require('@actions/core');
+          const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
+          core.setOutput('repo', repoName);
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    - name: Log into registry ${{ env.REGISTRY }}
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    - name: Build Go binary
+      run: |
+        export CGO_ENABLED=0
+        go build -o bin/app
 
-      - name: Checkout homelab repo
-        uses: actions/checkout@v2
-        with:
-          repository: ChristopherScot/homelab
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: homelab
+    - name: Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@v1
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.extract-repo-name.outputs.repo }}
 
-      - name: Update or create ArgoCD application
-        run: |
-          echo "Do the thing"
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v1
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
 
-      - name: SSH Debug
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Checkout homelab repo
+      uses: actions/checkout@v2
+      with:
+        repository: ChristopherScot/homelab
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: homelab
+
+    - name: Update or create ArgoCD application
+      run: |
+        cd homelab
+        REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        FILE=app-of-apps/apps/${REPO_NAME}.yaml
+        if test -f "$FILE"; then
+          sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
+        else
+          cat <<EOF > $FILE
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${REPO_NAME}
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    repoURL: 'https://github.com/${{ github.repository }}.git'
+    targetRevision: HEAD
+    path: .
+    helm:
+      valueFiles:
+        - values.yaml
+      values: |
+        image:
+          repository: ghcr.io/${REPO_NAME}
+          tag: latest
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+        fi
+        git config --global user.email "chris@chrisscotmartin.com"
+        git config --global user.name "Your Name"
+        git add $FILE
+        git commit -m "Update or create ArgoCD application to use new image"
+        git push
+  shell: /usr/bin/bash -e {0}
+  env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ChristopherScot/go-server-template
+    
           # ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 #     cd homelab
 #     REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
