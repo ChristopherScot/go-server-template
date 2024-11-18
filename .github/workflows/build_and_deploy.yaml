@@ -65,13 +65,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Checkout homelab repo
-        uses: actions/checkout@v2
-        with:
-          repository: ChristopherScot/homelab
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: homelab
-
       # if branch is main, deploy to argo
       - name: Argo Publish
         if: github.ref == 'refs/heads/main'
