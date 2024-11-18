@@ -71,7 +71,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone http://github.com/ChristopherScot/homelab.git
+          git clone https://x-access-token:${GITHUB_TOKEN}@github.com/ChristopherScot/homelab.git
           cd homelab
           latest_release_url=$(curl -s https://api.github.com/repos/ChristopherScot/ci-scripts/releases/latest | jq -r '.assets[] | select(.name == "argo-update.tar.gz") | .browser_download_url')
           curl -L -o argo-update.tar.gz $latest_release_url
@@ -82,8 +82,7 @@ jobs:
           git config --global user.name "CI"
           git add .
           git commit -m "CI Action from repo: ${{ steps.extract-repo-name.outputs.repo }}, commit: ${{ github.sha }}"
-          git push
-
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/ChristopherScot/homelab.git
       - name: SSH DEBUG
         uses: mxschmitt/action-tmate@v3
         with:
