@@ -72,51 +72,19 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: homelab
 
-      - name: Update or create ArgoCD application
+      # if branch is main, deploy to argo
+      - name: Argo Publish
+        if: github.ref == 'refs/heads/main'
         run: |
-          echo "Do the thing"
-
-      - name: SSH DEBUG
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-#     cd homelab
-#     REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-#     FILE=app-of-apps/apps/${REPO_NAME}.yaml
-#     if test -f "$FILE"; then
-#       sed -i 's|image: ghcr.io/.*/.*:.*|image: ghcr.io/${REPO_NAME}:latest|' $FILE
-#     else
-#       cat <<EOF > $FILE
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: ${REPO_NAME}
-#   namespace: argocd
-# spec:
-#   destination:
-#     namespace: default
-#     server: 'https://kubernetes.default.svc'
-#   project: default
-#   source:
-#     repoURL: 'https://github.com/${{ github.repository }}.git'
-#     targetRevision: HEAD
-#     path: .
-#     helm:
-#       valueFiles:
-#         - values.yaml
-#       values: |
-#         image:
-#           repository: ghcr.io/${REPO_NAME}
-#           tag: latest
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-# EOF
-#     fi
-#     git config --global user.email "ci@chrisscotmartin.com"
-#     git config --global user.name "CI"
-#     git add $FILE
-#     git commit -m "Update or create ArgoCD application to use new image"
-#     git push
-
+          git clone http://github.com/ChristopherScot/homelab.git
+          cd homelab
+          latest_release_url=$(curl -s https://api.github.com/repos/ChristopherScot/ci-scripts/releases/latest | jq -r '.assets[] | select(.name == "argo-update.tar.gz") | .browser_download_url')
+          curl -L -o argo-update.tar.gz $latest_release_url
+          tar -xzvf argo-update.tar.gz
+          chmod +x argo-update
+          ./argo-update --app-name ${{ steps.extract-repo-name.outputs.repo }} --image ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:latest
+          git config --global user.email "
+          git config --global user.name "CI"
+          git add .
+          git commit -m "CI Action from repo: ${{ steps.extract-repo-name.outputs.repo }}, commit: ${{ github.sha }}"
+          git push

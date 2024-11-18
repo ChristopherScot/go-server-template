@@ -1,3 +1,13 @@
-services:
-- go-server-template
+name: go-server-test
 team: me-myself-and-i
+replicas: 2
+type: go-service
+ingress:
+  type: ClusterIP
+  selector:
+    someotherThing: value
+  ports:
+  - port: 3000
+config:
+  random: value
+  foo: bar
