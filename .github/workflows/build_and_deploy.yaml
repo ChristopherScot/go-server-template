@@ -76,7 +76,7 @@ jobs:
           tar -xzvf argo-update.tar.gz
           chmod +x argo-update
           ./argo-update ../config.yaml ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:latest 
-          git config --global user.email "
+          git config --global user.email "CI@ChrisScotMartin.com"
           git config --global user.name "CI"
           git add .
           git commit -m "CI Action from repo: ${{ steps.extract-repo-name.outputs.repo }}, commit: ${{ github.sha }}"
