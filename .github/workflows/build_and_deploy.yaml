@@ -75,7 +75,7 @@ jobs:
           curl -L -o argo-update.tar.gz $latest_release_url
           tar -xzvf argo-update.tar.gz
           chmod +x argo-update
-          ./argo-update --app-name ${{ steps.extract-repo-name.outputs.repo }} --image ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:latest
+          ./argo-update --app-name ../config.yaml ${{ steps.extract-repo-name.outputs.repo }} --image ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:latest 
           git config --global user.email "
           git config --global user.name "CI"
           git add .
