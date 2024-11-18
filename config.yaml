@@ -9,7 +9,7 @@ ingress:
     someotherThing: value
   ports:
   - port: 3000
-    nodePort: 32888
+    nodePort: 32444
 config:
   random: value
   foo: bar
