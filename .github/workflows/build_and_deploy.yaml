@@ -83,3 +83,8 @@ jobs:
           git add .
           git commit -m "CI Action from repo: ${{ steps.extract-repo-name.outputs.repo }}, commit: ${{ github.sha }}"
           git push
+
+      - name: SSH DEBUG
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
