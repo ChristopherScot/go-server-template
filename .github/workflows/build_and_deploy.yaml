@@ -69,7 +69,7 @@ jobs:
       - name: Argo Publish
         if: github.ref == 'refs/heads/main'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CI_PAT }}
         run: |
           git clone https://x-access-token:${GITHUB_TOKEN}@github.com/ChristopherScot/homelab.git
           cd homelab
@@ -83,7 +83,9 @@ jobs:
           git add .
           git commit -m "CI Action from repo: ${{ steps.extract-repo-name.outputs.repo }}, commit: ${{ github.sha }}"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/ChristopherScot/homelab.git
-      - name: SSH DEBUG
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
+
+      # - name: SSH DEBUG
+      #   if: failure()
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
