@@ -3,11 +3,13 @@ team: me-myself-and-i
 replicas: 2
 type: go-service
 ingress:
-  type: ClusterIP
+  type: NodePort
+  # type: ClusterIP
   selector:
     someotherThing: value
   ports:
   - port: 3000
+    nodePort: 32888
 config:
   random: value
   foo: bar
