@@ -64,8 +64,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ github.sha }}
+            ${{ env.REGISTRY }}/christopherscot/${{ steps.extract-repo-name.outputs.repo }}:latest
+            ${{ env.REGISTRY }}/christopherscot/${{ steps.extract-repo-name.outputs.repo }}:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
 
       # if branch is main, deploy to argo
