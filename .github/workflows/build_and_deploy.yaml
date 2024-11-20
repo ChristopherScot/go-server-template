@@ -64,8 +64,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:latest
-            ghcr.io/${{ steps.extract-repo-name.outputs.repo }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
 
       # if branch is main, deploy to argo
