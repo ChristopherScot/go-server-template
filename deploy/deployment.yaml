@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: CHANGEME
+  namespace: CHANGEME
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: CHANGEME
+  template:
+    metadata:
+      labels:
+        app: CHANGEME
+    spec:
+      containers:
+        - name: CHANGEME
+          image: ghcr.io/christopherscot/CHANGEME:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+          # Matches the nonroot user baked into the Dockerfile. If you
+          # change one, change the other or the pod cannot exec its binary.
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 65532
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          livenessProbe:
+            httpGet: { path: /healthz, port: 3000 }
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: { path: /healthz, port: 3000 }
+            initialDelaySeconds: 2
+            periodSeconds: 10

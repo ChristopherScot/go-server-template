@@ -1,14 +1,15 @@
-# Use a minimal base image to run the application
-FROM alpine:latest
+# Runs as nonroot 65532 so the image works with a hardened pod spec
+# (runAsNonRoot, readOnlyRootFilesystem). The previous version copied the
+# binary into /root/ and ran as root, which crashloops under that spec with
+# "permission denied" and no logs - a genuinely confusing failure.
+FROM alpine:3.21
 
-# Set the working directory inside the container
-WORKDIR /root/
+RUN addgroup -g 65532 -S nonroot && adduser -u 65532 -S nonroot -G nonroot
 
-# Copy the pre-built application into the container
-COPY bin/app .
+WORKDIR /app
+COPY bin/app /app/app
+RUN chmod 0555 /app/app
 
-# Expose the port the application runs on
+USER 65532:65532
 EXPOSE 3000
-
-# Define the entry point to run the application
-CMD ["./app"]
+ENTRYPOINT ["/app/app"]

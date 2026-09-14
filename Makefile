@@ -1,27 +1,21 @@
 BINARY_NAME=app
-DOCKER_IMAGE=ghcr.io/$(shell echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):latest
 
-# Build the Go application
+# CGO_ENABLED=0 to match CI. With cgo on, the binary links against glibc and
+# dies on alpine ("not found" on exec, because musl != glibc) - so a locally
+# built image would fail in a way CI never reproduces.
 build:
-	export CGO_ENABLED=1; go build -o bin/$(BINARY_NAME) .
+	CGO_ENABLED=0 go build -o bin/$(BINARY_NAME) .
 
-# Run the Go application
 run: build
 	./bin/$(BINARY_NAME)
 
-# Clean the build artifacts
+test:
+	go test -race ./...
+
 clean:
 	rm -f bin/$(BINARY_NAME)
 
-# Build the Docker image
 docker-build: build
-	docker build -t $(DOCKER_IMAGE) .
+	docker build -t $(BINARY_NAME) .
 
-# Push the Docker image
-docker-push: docker-build
-	docker push $(DOCKER_IMAGE)
-
-# Default target
-all: build
-
-.PHONY: build run clean docker-build docker-push all
+.PHONY: build run test clean docker-build

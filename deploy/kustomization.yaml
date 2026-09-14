@@ -1,0 +1,21 @@
+# REQUIRED - do not delete.
+#
+# argocd-image-updater only writes image bumps into Kustomize, Helm or
+# Plugin sources. A plain directory of YAML has no parameter for it to
+# write, so Argo classifies the app as "Directory" and the updater skips
+# it with only a log warning:
+#
+#   skipping app '...' of type 'Directory' because it's not of supported
+#   source type
+#
+# The app stays Synced/Healthy on a stale image while new builds pile up in
+# the registry. This file is what makes automation work; `images:` below is
+# the field the updater rewrites with each new digest.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml
+images:
+  - name: ghcr.io/christopherscot/CHANGEME
+    newTag: latest
